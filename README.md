@@ -4,3 +4,4 @@ http://flask-sqlalchemy.pocoo.org/2.2/
 https://flask-login.readthedocs.io/en/latest/
 https://blog.miguelgrinberg.com/post/how-secure-is-the-flask-user-session
 https://www.tutorialspoint.com/flask/
+
