@@ -1,33 +1,45 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, flash, redirect, render_template, request, session, abort
+import os
+from sqlalchemy.orm import sessionmaker
+from db_def import *
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/insta.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-db = SQLAlchemy(app)
-
-
-class InstaDB(db.Model):
-    id = db.Column('user_id', db.Integer, primary_key=True)
-    user_name = db.Column(db.String(100))
-    user_pass = db.Column(db.String(50))
-
-    def __init__(self, name, city):
-        self.user_name = name
-        self.user_pass = city
 
 
 @app.route('/')
-def hello_world():
-    return 'Hello World!'
+def home():
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        return "Hello Boss!  <a href='/logout'>Logout</a>"
 
-def add_user_test():
-    tmp_test = InstaDB('Sezer', 'test_pass')
-    db.session.add(tmp_test)
-    db.session.commit()
 
-if __name__ == '__main__':
-    db.create_all()
-    add_user_test()
-    app.run(port=5000, debug=True)
+@app.route('/login', methods=['POST'])
+def do_admin_login():
+    POST_USERNAME = str(request.form['username'])
+    POST_PASSWORD = str(request.form['password'])
 
+    Session = sessionmaker(bind=engine)
+    s = Session()
+    query = s.query(User).filter(User.username.in_([POST_USERNAME]), User.password.in_([POST_PASSWORD]))
+    result = query.first()
+    print(result)
+    if result:
+        session['logged_in'] = True
+    else:
+        flash('wrong password!')
+    return home()
+
+
+@app.route("/logout")
+def logout():
+    session['logged_in'] = False
+    return home()
+
+
+if __name__ == "__main__":
+    app.secret_key = os.urandom(12)
+    engine = create_engine('sqlite:///test.db', echo=True)
+    Session = sessionmaker(bind=engine)
+    app.run(debug=True, host='0.0.0.0', port=4000)
